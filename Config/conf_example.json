@@ -1,0 +1,39 @@
+{
+    "model" : "VAE",
+    "config" : 0,
+    "appliance" : "Fridge",
+    "run" : 10,
+    "training" : {
+        "batch_size" : 128,
+        "epoch" : 100,
+        "lr" : 0.001,
+        "decay_steps" : 20,
+        "optimizer" : "rmsprop",
+        "patience" : 0,
+        "start_stopping" : 25,
+        "save_best" : 0,
+        "ratio_train" : 0.3,
+        "ratio_test" : 0.1,
+        "validation_split" : 0.2
+        "S2P_strides" : 0
+    },
+    "dataset" : {
+        "name" : "ukdale",
+        "test" : {
+            "house" : [1],
+            "ratio" : [1]
+        },
+        "train" : {
+            "house" : [2, 5],
+            "ratio" : [1, 1]
+       }
+    },
+    "preprocessing" : {
+        "main_mean" : 0,
+        "main_std" : 1,
+        "app_mean" : 0,
+        "app_std" : 1,
+        "width" : 1024,
+        "strides" : 64,
+    }
+}
