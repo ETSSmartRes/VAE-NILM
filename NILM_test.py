@@ -32,20 +32,11 @@ a = parser.parse_args()
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(a.gpu)
 
-time = a.time 
-
 thr_house_2 = { "Fridge" : 50,
                 "WashingMachine" : 20,
                 "Dishwasher" : 100,
                 "Kettle" : 100,
                 "Microwave" : 200}
-
-print("###############################################################################")
-print("NILM DISAGREGATOR")
-print("GPU : {}".format(a.gpu))
-print("CONFIG : {}".format(a.config))
-print("FOLDER : {}".format(time))
-print("###############################################################################")
 
 with open(a.config) as data_file:
     nilm = json.load(data_file)
@@ -55,6 +46,19 @@ np.random.seed(123)
 name = "NILM_Disag_{}".format(nilm["appliance"])
 epochs = nilm["training"]["epoch"]
 start = nilm["training"]["start_stopping"]
+
+if a.time == "":
+    files_and_directories = os.listdir("{}/ukdale/{}/logs/model/".format(name, nilm["model"]))
+    time = np.sort(files_and_directories)[-1]
+else:
+    time = a.time 
+    
+print("###############################################################################")
+print("NILM DISAGREGATOR")
+print("GPU : {}".format(a.gpu))
+print("CONFIG : {}".format(a.config))
+print("FOLDER : {}".format(time))
+print("###############################################################################")
 
 ###############################################################################
 # Load history files

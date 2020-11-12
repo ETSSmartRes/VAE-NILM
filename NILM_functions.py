@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from VAE_functions import *
 
 def load_data(model, appliance, dataset, width, strides):
 
@@ -750,3 +751,171 @@ class AdditionalValidationSets(tf.keras.callbacks.Callback):
                 else:
                     valuename = validation_set_name + '_' + str(self.model.metrics[i-1].name)
                 self.history.setdefault(valuename, []).append(result)
+                
+def acc_Power(x_pred, x_test, c_test=0, app_ratio=0, disaggregation=False):
+    if disaggregation:
+        Pest = np.sum(x_pred, axis=1).reshape([-1,1])
+
+        Preal = np.sum(x_test, axis=1).reshape([-1,1])
+
+        acc_P = ((np.abs(Pest - Preal)/(2*Preal))*-1)+1
+
+        acc_P = np.nan_to_num(acc_P)
+        
+        acc_P_tot = np.mean(acc_P[acc_P>0])
+        acc_P_app = acc_P.reshape(-1)
+    else:
+        M_ratio = (np.tile(app_ratio, [c_test.shape[0],1])*c_test)
+
+        Pest = np.sum(x_pred, axis=1).reshape([-1,1])
+
+        Pest = (np.tile(Pest, [1,c_test.shape[1]])*M_ratio)
+
+        Preal = np.sum(x_test, axis=1).reshape([-1,1])
+
+        Preal = (np.tile(Preal, [1,c_test.shape[1]])*M_ratio)
+
+        acc_P = ((np.abs(Pest - Preal)/(2*Preal))*-1)+1
+
+        acc_P = np.nan_to_num(acc_P)
+
+        acc_P_tot = acc_P.sum(axis=1).mean()
+        acc_P_app = acc_P.sum(axis=0)/c_test.sum(axis=0)
+
+    print(acc_P_tot)
+    
+    return acc_P_tot, acc_P_app, acc_P
+
+def MAE_metric(x_pred, x_test, c_test=0, app_ratio=0, disaggregation=False, only_power_on=False):
+    
+    if disaggregation:
+        if only_power_on:
+            MAE = np.zeros(x_pred.shape[0])
+            for i in range(x_pred.shape[0]):
+                ind = (x_pred[i,:])>0
+                MAE[i] = np.mean(np.abs((x_test[i,ind]-x_pred[i,ind])))
+            MAE = np.nan_to_num(MAE)
+        else:
+            MAE = np.mean(np.abs((x_test-x_pred)), axis=1).reshape([-1,1])
+        MAE_app = MAE
+        MAE_tot = np.mean(MAE[MAE>0])
+    else:
+        MAE = np.mean(np.abs((x_test-x_pred)), axis=1).reshape([-1,1])
+        
+        M_ratio = (np.tile(app_ratio, [c_test.shape[0],1])*c_test)
+        MAE = np.tile(MAE, [1,c_test.shape[1]])*M_ratio
+
+        MAE_tot = MAE.sum(axis=1).mean()
+        MAE_app = MAE.sum(axis=0)/c_test.sum(axis=0)
+
+    print(MAE_tot)
+    
+    return MAE_tot, MAE_app, MAE
+
+def SAE_metric(x_pred, x_test, window_size):
+    
+    SAE = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        
+        SAE_1d = []
+        
+        for t in range(0, x_pred.shape[1], window_size):
+            SAE_1d.append(np.abs(x_pred[i,t:t+window_size].sum() - x_test[i,t:t+window_size].sum())/x_test[i,t:t+window_size].sum())
+        
+        SAE[i] = np.mean(SAE_1d)
+        
+    for s in SAE:
+        print(s)
+    
+    return SAE
+
+def SAE_metric(x_pred, x_test):
+    
+    SAE = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        SAE[i] = np.abs(x_pred[i,:].sum() - x_test[i,:].sum())/x_test[i,:].sum()
+        
+    print(SAE)
+    
+    return SAE
+
+def F1_metric(x_pred, x_test, thr):
+    from sklearn.metrics import f1_score as f1_score
+    
+    x_pred_b = np.copy(x_pred)
+    x_pred_b[x_pred_b<thr] = 0
+    x_pred_b[x_pred_b>=thr] = 1
+    
+    x_test_b = np.copy(x_test)
+    x_test_b[x_test_b<thr] = 0
+    x_test_b[x_test_b>=thr] = 1
+    
+    F1 = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        F1[i] = f1_score(x_test_b[i,:], x_pred_b[i,:])
+
+    for s in F1:
+        print(s)
+        
+    return F1
+
+def RE_metric(x_pred, x_test, thr):
+    from sklearn.metrics import recall_score
+    
+    x_pred_b = np.copy(x_pred)
+    x_pred_b[x_pred_b<thr] = 0
+    x_pred_b[x_pred_b>=thr] = 1
+    
+    x_test_b = np.copy(x_test)
+    x_test_b[x_test_b<thr] = 0
+    x_test_b[x_test_b>=thr] = 1
+    
+    RE = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        RE[i] = recall_score(x_test_b[i,:], x_pred_b[i,:])
+        
+    for s in RE:
+        print(s)
+        
+    return RE
+
+def PR_metric(x_pred, x_test, thr):
+    from sklearn.metrics import precision_score
+    
+    x_pred_b = np.copy(x_pred)
+    x_pred_b[x_pred_b<thr] = 0
+    x_pred_b[x_pred_b>=thr] = 1
+    
+    x_test_b = np.copy(x_test)
+    x_test_b[x_test_b<thr] = 0
+    x_test_b[x_test_b>=thr] = 1
+    
+    PR = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        PR[i] = precision_score(x_test_b[i,:], x_pred_b[i,:])
+        
+    for s in PR:
+        print(s)
+        
+    return PR
+
+def reconstruct(y, width, strides):
+    
+    yr = np.zeros([width+(y.shape[0]-1)*strides])
+    zr = np.zeros([width+(y.shape[0]-1)*strides])
+    
+    #print(yr.shape)
+    
+    for i in range(y.shape[0]):
+        #print(i)
+        yr[i*strides:i*strides+width] += y[i,:,0]
+        zr[i*strides:i*strides+width] += np.ones([width])
+        
+    yr /= zr
+    
+    return yr

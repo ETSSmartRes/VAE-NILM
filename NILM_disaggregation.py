@@ -168,9 +168,6 @@ for r in range(1, nilm["run"]+1):
         if nilm["model"] == "S2P":
             x_train_s2p, y_train_s2p = transform_s2p(x_train, y_train, nilm["preprocessing"]["width"], nilm["training"]["S2P_strides"])
             
-            if r < 6:
-                continue
-            
             history = model.fit((x_train_s2p-main_mean)/main_std, (y_train_s2p-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
                                 epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
 
