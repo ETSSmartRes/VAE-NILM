@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--gpu", default=0, type=int, help="GPU to use")
 parser.add_argument("--config", default="", type=str, help="Path to the config file")
 parser.add_argument("--time", default="", type=str, help="Folder name containing runs")
+parser.add_argument("--save_pred", default=False, type=bool, help="Save y_pred_all")
 a = parser.parse_args()
 
 # Select GPU
@@ -94,6 +95,8 @@ elif nilm["model"] == "DAE":
     model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer="adam")
 elif nilm["model"] == "S2P":
     model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=tf.keras.optimizers.Adam(learning_rate=nilm["training"]["lr"], beta_1=0.9, beta_2=0.999))
+elif nilm["model"] == "S2S":
+    model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=tf.keras.optimizers.Adam(learning_rate=nilm["training"]["lr"], beta_1=0.9, beta_2=0.999))
         
 app_list = nilm["appliance"]
 width = nilm["preprocessing"]["width"]
@@ -128,26 +131,33 @@ RE_run = []
 F1_run = []
 SAE_run = []
 
+#Load Data
+nilm["dataset"]["test"]["ratio"] = [1]    
+x_train, y_train, x_test, y_test = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"])
+
 for r in range(1, nilm["run"]+1):
     pos_val_min = np.argmin(hist[r-1].all()["val_mean_absolute_error"][start:epochs]) + start
     
     model.load_weights("{}/ukdale/{}/logs/model/{}/{}/cp-{epoch:04d}.ckpt".format(name, nilm["model"], time, r, epoch=pos_val_min+1))
-        
-    nilm["dataset"]["test"]["ratio"] = [1]
-        
-    x_train, y_train, x_test, y_test = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"])
     
     if nilm["model"] == "S2P":
-        x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test)
+        x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, width)
         y_pred = model.predict([(x_test_s2p-main_mean)/main_std], verbose=1)
 
         y_all_pred = y_pred.reshape([-1])*app_std+app_mean
         x_all = x_test_s2p.reshape([-1])
         y_all_true = y_test_s2p.reshape([-1])
     elif nilm["model"] == "VAE":
-        y_pred = model.predict([x_test])
+        y_pred = model.predict([(x_test-main_mean)/main_std])
 
-        y_all_pred = reconstruct(y_pred, width, stride)
+        y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride)
+        x_all = reconstruct(x_test[:], width, stride)
+        y_all_true = reconstruct(y_test[:], width, stride)
+        
+    elif nilm["model"] == "S2S":
+        y_pred = model.predict([(x_test-main_mean)/main_std], verbose=1)
+
+        y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride)
         x_all = reconstruct(x_test[:], width, stride)
         y_all_true = reconstruct(y_test[:], width, stride)
         
@@ -157,6 +167,11 @@ for r in range(1, nilm["run"]+1):
     x_all = x_all.reshape([1,-1])
     y_all_pred = y_all_pred.reshape([1,-1])
     y_all_true = y_all_true.reshape([1,-1])
+    
+    if a.save_pred:
+        np.save("{}/ukdale/{}/logs/model/{}/pred.npy".format(name, nilm["model"], time), [y_all_pred, y_all_true])
+
+    print("Best Epoch : {}".format(pos_val_min+1))
 
     MAE_tot, MAE_app, MAE = MAE_metric(y_all_pred, y_all_true, disaggregation=True, only_power_on=False)
     acc_P_tot, acc_P_app, acc_P = acc_Power(y_all_pred, y_all_true, disaggregation=True)
@@ -165,12 +180,15 @@ for r in range(1, nilm["run"]+1):
     F1_app = F1_metric(y_all_pred, y_all_true, thr=thr_house_2[nilm["appliance"]])
     SAE_app = SAE_metric(y_all_pred, y_all_true)
 
-    MAE_run.append(MAE_tot)
-    ACC_run.append(acc_P_tot)
-    PR_run.append(PR_app[0])
-    RE_run.append(RE_app[0])
-    F1_run.append(F1_app[0])
-    SAE_run.append(SAE_app[0])
+    if np.isnan(acc_P_tot):
+        print("Nan Detected")
+    else:
+        MAE_run.append(MAE_tot)
+        ACC_run.append(acc_P_tot)
+        PR_run.append(PR_app[0])
+        RE_run.append(RE_app[0])
+        F1_run.append(F1_app[0])
+        SAE_run.append(SAE_app[0])
 
 print(np.mean(MAE_run), np.std(MAE_run))
 print(np.mean(ACC_run), np.std(ACC_run))

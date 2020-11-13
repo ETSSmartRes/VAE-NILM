@@ -84,6 +84,8 @@ for r in range(1, nilm["run"]+1):
         model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer="adam")
     elif nilm["model"] == "S2P":
         model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=tf.keras.optimizers.Adam(learning_rate=nilm["training"]["lr"], beta_1=0.9, beta_2=0.999))
+    elif nilm["model"] == "S2S":
+        model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=tf.keras.optimizers.Adam(learning_rate=nilm["training"]["lr"], beta_1=0.9, beta_2=0.999))
 
     ###############################################################################
     # Callback checkpoint settings
@@ -171,7 +173,11 @@ for r in range(1, nilm["run"]+1):
             history = model.fit((x_train_s2p-main_mean)/main_std, (y_train_s2p-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
                                 epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
 
-        else:    
+        elif nilm["model"] == "VAE":    
+            history = model.fit((x_train-main_mean)/main_std, (y_train-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
+                                epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
+            
+        elif nilm["model"] == "S2S":    
             history = model.fit((x_train-main_mean)/main_std, (y_train-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
                                 epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
 

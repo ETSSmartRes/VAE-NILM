@@ -40,7 +40,12 @@ def load_data(model, appliance, dataset, width, strides):
         for h, r in zip(dataset[data_type]["house"], dataset[data_type]["ratio"]):
             x, y = import_data(appliance, h) # Load complete dataset
             x_, y_ = seq_dataset(x, y, width, stride) # Divide dataset in window
-            x_r, y_r = select_ratio(x_, y_, r)# Select the proportion needed
+            
+            if data_type == "test":
+                x_r = x_
+                y_r = y_
+            else:
+                x_r, y_r = select_ratio(x_, y_, r)# Select the proportion needed
 
             print("Total house {} : x:{}, y:{}".format(h, x_.shape, y_.shape))
             print("Ratio house {} : {}, x:{}, y:{}".format(h, r, x_r.shape, y_r.shape))
@@ -61,6 +66,10 @@ def load_data(model, appliance, dataset, width, strides):
             stride = int(strides)
     
         elif model == "VAE":
+            width = width
+            stride = strides
+        
+        elif model == "S2S":
             width = width
             stride = strides
 
@@ -631,19 +640,6 @@ def create_model(model, config, width, optimizer):
         model (tensorflow.keras.Model): The uncompiled seq2point model.
 
         """
-
-#         input_layer = tf.keras.layers.Input(shape=(a.width,))
-#         reshape_layer = tf.keras.layers.Reshape((1, a.width, 1))(input_layer)
-#         conv_layer_1 = tf.keras.layers.Convolution2D(filters=30, kernel_size=(10, 1), strides=(1, 1), padding="same", activation="relu")(reshape_layer)
-#         conv_layer_2 = tf.keras.layers.Convolution2D(filters=30, kernel_size=(8, 1), strides=(1, 1), padding="same", activation="relu")(conv_layer_1)
-#         conv_layer_3 = tf.keras.layers.Convolution2D(filters=40, kernel_size=(6, 1), strides=(1, 1), padding="same", activation="relu")(conv_layer_2)
-#         conv_layer_4 = tf.keras.layers.Convolution2D(filters=50, kernel_size=(5, 1), strides=(1, 1), padding="same", activation="relu")(conv_layer_3)
-#         conv_layer_5 = tf.keras.layers.Convolution2D(filters=50, kernel_size=(5, 1), strides=(1, 1), padding="same", activation="relu")(conv_layer_4)
-#         flatten_layer = tf.keras.layers.Flatten()(conv_layer_5)
-#         label_layer = tf.keras.layers.Dense(1024, activation="relu")(flatten_layer)
-#         output_layer = tf.keras.layers.Dense(1, activation="linear")(label_layer)
-
-#         model = tf.keras.Model(inputs=input_layer, outputs=output_layer)
         
         input_layer = tf.keras.layers.Input(shape=(width))
         reshape_layer = tf.keras.layers.Reshape((width, 1))(input_layer)
@@ -663,6 +659,36 @@ def create_model(model, config, width, optimizer):
         output_layer = tf.keras.layers.Dense(1, activation="linear")(label_layer)
 
         model = tf.keras.Model(inputs=input_layer, outputs=output_layer)
+        
+        model.compile(optimizer=optimizer, loss="mse", metrics=["mean_absolute_error"])
+        
+    elif model == "S2S":
+        """Specifies the structure of a seq2point model using Keras' functional API.
+
+        Returns:
+        model (tensorflow.keras.Model): The uncompiled seq2point model.
+
+        """
+        
+        input_layer = tf.keras.layers.Input(shape=(width, 1))
+        #reshape_layer = tf.keras.layers.Reshape((width, 1))(input_layer)
+        conv_layer_1 = tf.keras.layers.Conv1D(filters=30, kernel_size=10, strides=1, padding="same", activation="relu")(input_layer)
+        conv_layer_1 = tf.keras.layers.Dropout(0.5)(conv_layer_1)
+        conv_layer_2 = tf.keras.layers.Conv1D(filters=30, kernel_size=8, strides=1, padding="same", activation="relu")(conv_layer_1)
+        conv_layer_2 = tf.keras.layers.Dropout(0.5)(conv_layer_2)
+        conv_layer_3 = tf.keras.layers.Conv1D(filters=40, kernel_size=6, strides=1, padding="same", activation="relu")(conv_layer_2)
+        conv_layer_3 = tf.keras.layers.Dropout(0.5)(conv_layer_3)
+        conv_layer_4 = tf.keras.layers.Conv1D(filters=50, kernel_size=5, strides=1, padding="same", activation="relu")(conv_layer_3)
+        conv_layer_4 = tf.keras.layers.Dropout(0.5)(conv_layer_4)
+        conv_layer_5 = tf.keras.layers.Conv1D(filters=50, kernel_size=5, strides=1, padding="same", activation="relu")(conv_layer_4)
+        conv_layer_5 = tf.keras.layers.Dropout(0.5)(conv_layer_5)
+        flatten_layer = tf.keras.layers.Flatten()(conv_layer_5)
+        label_layer = tf.keras.layers.Dense(1024, activation="relu")(flatten_layer)
+        label_layer = tf.keras.layers.Dropout(0.5)(label_layer)
+        output_layer = tf.keras.layers.Dense(width, activation="linear")(label_layer)
+        reshape_output_layer = tf.keras.layers.Reshape((width, 1))(output_layer)
+
+        model = tf.keras.Model(inputs=input_layer, outputs=reshape_output_layer)
         
         model.compile(optimizer=optimizer, loss="mse", metrics=["mean_absolute_error"])
         
