@@ -4,18 +4,18 @@
     "appliance" : "Microwave",
     "run" : 10,
     "training" : {
-        "batch_size" : 1000,
-        "epoch" : 100,
+        "batch_size" : 2000,
+        "epoch" : 50,
         "lr" : 0.001,
         "decay_steps" : 1,
         "optimizer" : "adam",
         "patience" : 10,
-        "start_stopping" : 5,
+        "start_stopping" : 10,
         "save_best" : 0,
         "ratio_train" : 0.3,
         "ratio_test" : 0,
         "validation_split" : 0.2,
-        "S2P_strides" : 1
+        "S2P_strides" : 2
     },
     "dataset" : {
         "name" : "ukdale",

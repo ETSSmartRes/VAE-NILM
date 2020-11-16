@@ -81,7 +81,7 @@ for r in range(1, nilm["run"]+1):
     if nilm["model"] == "VAE":
         model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=get_optimizer(nilm["training"]["optimizer"]))
     elif nilm["model"] == "DAE":
-        model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer="adam")
+        model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer="Adam")
     elif nilm["model"] == "S2P":
         model = create_model(nilm["model"], nilm["config"], nilm["preprocessing"]["width"], optimizer=tf.keras.optimizers.Adam(learning_rate=nilm["training"]["lr"], beta_1=0.9, beta_2=0.999))
     elif nilm["model"] == "S2S":
@@ -101,7 +101,7 @@ for r in range(1, nilm["run"]+1):
         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                          save_weights_only=True,
                                                          verbose=0,
-                                                         monitor="val_mean_absolute_error",
+                                                         monitor="val_loss",
                                                          mode="min",
                                                          save_best_only=True)
     else:
@@ -116,7 +116,12 @@ for r in range(1, nilm["run"]+1):
     list_callbacks.append(cp_callback)
 
     if nilm["training"]["patience"] > 0:
-        es_callback = CustomStopper(monitor='val_mean_absolute_error', patience=nilm["training"]["patience"], start_epoch=nilm["training"]["start_stopping"])
+        patience = nilm["training"]["patience"]
+        start_epoch = nilm["training"]["start_stopping"]
+        
+        print("Patience : {}, Start at : {}".format(patience, start_epoch))
+        
+        es_callback = CustomStopper(monitor='val_loss', patience=patience, start_epoch=start_epoch, mode="auto")
         
         list_callbacks.append(es_callback)
     
@@ -142,7 +147,7 @@ for r in range(1, nilm["run"]+1):
     elif nilm["dataset"]["name"] == "refit":
         history_cb = AdditionalValidationSets([(x_test, y_test, 'House_2')], verbose=1)
     
-    list_callbacks.append(history_cb)
+    #list_callbacks.append(history_cb)
     
     ###############################################################################
     # Summary of all parameters
@@ -180,12 +185,16 @@ for r in range(1, nilm["run"]+1):
         elif nilm["model"] == "S2S":    
             history = model.fit((x_train-main_mean)/main_std, (y_train-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
                                 epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
+            
+        elif nilm["model"] == "DAE":    
+            history = model.fit((x_train-main_mean)/main_std, (y_train-app_mean)/app_std, validation_split=nilm["training"]["validation_split"], shuffle=True, 
+                                epochs=epochs, batch_size=batch_size, callbacks=list_callbacks, verbose=1, initial_epoch=0)
 
         ###############################################################################
         # Save history
         ###############################################################################
         np.save("{}/{}/{}/logs/model/{}/{}/history_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history.history)
-        np.save("{}/{}/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history_cb.history)
+        #np.save("{}/{}/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history_cb.history)
 
         print("Fit finished!")
     else:

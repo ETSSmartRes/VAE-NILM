@@ -72,6 +72,10 @@ def load_data(model, appliance, dataset, width, strides):
         elif model == "S2S":
             width = width
             stride = strides
+            
+        elif model == "DAE":
+            width = width
+            stride = strides
 
         print("###############################################################################")
         print("Create train dataset")
@@ -712,8 +716,7 @@ def transform_s2p(x, y, width, stride=1):
     return x_s2p, y_s2p
 
 class CustomStopper(tf.keras.callbacks.EarlyStopping):
-    def __init__(self, monitor='val_loss',
-             min_delta=0, patience=0, verbose=0, mode='auto', start_epoch = 25): # add argument for starting epoch
+    def __init__(self, monitor='val_loss', min_delta=0.0001, patience=0, verbose=0, mode='auto', start_epoch = 25): # add argument for starting epoch
         super(CustomStopper, self).__init__()
         self.start_epoch = start_epoch
 

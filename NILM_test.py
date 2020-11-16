@@ -67,12 +67,13 @@ print("#########################################################################
 hist = []
 
 for r in range(1, nilm["run"]+1):
-    hist.append(np.load("{}/ukdale/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["model"], time, r, epochs), allow_pickle=True))
+    #hist.append(np.load("{}/ukdale/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["model"], time, r, epochs), allow_pickle=True))
+    hist.append(np.load("{}/ukdale/{}/logs/model/{}/{}/history_{}.npy".format(name, nilm["model"], time, r, epochs), allow_pickle=True))
     
 MAE_run = []
 for r in range(len(hist)):
     pos_val_min = np.argmin(hist[r].all()["val_mean_absolute_error"][start:epochs])
-    MAE_run.append(hist[r].all()["House_2_mean_absolute_error"][pos_val_min+start])
+    MAE_run.append(hist[r].all()["val_mean_absolute_error"][pos_val_min+start])
     
 print("Result : {} ± {}".format(np.mean(MAE_run), np.std(MAE_run)))
 
@@ -138,7 +139,10 @@ x_train, y_train, x_test, y_test = load_data(nilm["model"], nilm["appliance"], n
 for r in range(1, nilm["run"]+1):
     pos_val_min = np.argmin(hist[r-1].all()["val_mean_absolute_error"][start:epochs]) + start
     
-    model.load_weights("{}/ukdale/{}/logs/model/{}/{}/cp-{epoch:04d}.ckpt".format(name, nilm["model"], time, r, epoch=pos_val_min+1))
+    if nilm["training"]["save_best"]:
+        model.load_weights("{}/ukdale/{}/logs/model/{}/{}/checkpoint.ckpt".format(name, nilm["model"], time, r))
+    else:
+        model.load_weights("{}/ukdale/{}/logs/model/{}/{}/cp-{epoch:04d}.ckpt".format(name, nilm["model"], time, r, epoch=pos_val_min+1))
     
     if nilm["model"] == "S2P":
         x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, width)
@@ -155,6 +159,13 @@ for r in range(1, nilm["run"]+1):
         y_all_true = reconstruct(y_test[:], width, stride)
         
     elif nilm["model"] == "S2S":
+        y_pred = model.predict([(x_test-main_mean)/main_std], verbose=1)
+
+        y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride)
+        x_all = reconstruct(x_test[:], width, stride)
+        y_all_true = reconstruct(y_test[:], width, stride)
+        
+    elif nilm["model"] == "DAE":
         y_pred = model.predict([(x_test-main_mean)/main_std], verbose=1)
 
         y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride)
