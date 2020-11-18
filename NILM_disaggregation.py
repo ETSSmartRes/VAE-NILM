@@ -95,17 +95,17 @@ for r in range(1, nilm["run"]+1):
     
     # Create a callback that saves the model's weights
     if nilm["training"]["save_best"] == 1:
-        checkpoint_path = "{}/{}/{}/logs/model/{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], time, r) +"/checkpoint.ckpt"
+        checkpoint_path = "{}/{}/{}/logs/model/House_{}/{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time, r) +"/checkpoint.ckpt"
         checkpoint_dir = os.path.dirname(checkpoint_path)
         
         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                          save_weights_only=True,
                                                          verbose=0,
-                                                         monitor="val_loss",
+                                                         monitor="val_mean_absolute_error",
                                                          mode="min",
                                                          save_best_only=True)
     else:
-        checkpoint_path = "{}/{}/{}/logs/model/{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], time, r) +"/cp-{epoch:04d}.ckpt"
+        checkpoint_path = "{}/{}/{}/logs/model/House_{}/{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time, r) +"/cp-{epoch:04d}.ckpt"
         checkpoint_dir = os.path.dirname(checkpoint_path)
         
         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
@@ -159,10 +159,10 @@ for r in range(1, nilm["run"]+1):
     print("Run number : {}/{}".format(r,nilm["run"]))
     print("###############################################################################")
 
-    if not os.path.exists("{}/{}/{}/logs/model/{}".format(name, nilm["dataset"]["name"], nilm["model"], time)):
-        os.makedirs("{}/{}/{}/logs/model/{}".format(name, nilm["dataset"]["name"], nilm["model"], time))
+    if not os.path.exists("{}/{}/{}/logs/model/House_{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time)):
+        os.makedirs("{}/{}/{}/logs/model/House_{}/{}".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time))
 
-    with open("{}/{}/{}/logs/model/{}/config.txt".format(name, nilm["dataset"]["name"], nilm["model"], time), "w") as outfile:
+    with open("{}/{}/{}/logs/model/House_{}/{}/config.txt".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time), "w") as outfile:
         json.dump(nilm, outfile)
 
     ###############################################################################
@@ -193,7 +193,7 @@ for r in range(1, nilm["run"]+1):
         ###############################################################################
         # Save history
         ###############################################################################
-        np.save("{}/{}/{}/logs/model/{}/{}/history_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history.history)
+        np.save("{}/{}/{}/logs/model/House_{}/{}/{}/history_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time, r, epochs), history.history)
         #np.save("{}/{}/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history_cb.history)
 
         print("Fit finished!")

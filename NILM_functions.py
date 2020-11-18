@@ -716,13 +716,15 @@ def transform_s2p(x, y, width, stride=1):
     return x_s2p, y_s2p
 
 class CustomStopper(tf.keras.callbacks.EarlyStopping):
-    def __init__(self, monitor='val_loss', min_delta=0.0001, patience=0, verbose=0, mode='auto', start_epoch = 25): # add argument for starting epoch
-        super(CustomStopper, self).__init__()
+    def __init__(self, monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto', start_epoch=5):
+        super().__init__(monitor=monitor, min_delta=min_delta, patience=patience, verbose=verbose, mode=mode)
         self.start_epoch = start_epoch
 
     def on_epoch_end(self, epoch, logs=None):
+        print("On epoch End!")
         if epoch > self.start_epoch:
             super().on_epoch_end(epoch, logs)
+            print("On epoch End after starting point!")
     
 
 class AdditionalValidationSets(tf.keras.callbacks.Callback):

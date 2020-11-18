@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--gpu", default=0, type=int, help="GPU to use")
 parser.add_argument("--config", default="", type=str, help="Path to the config file")
 parser.add_argument("--time", default="", type=str, help="Folder name containing runs")
-parser.add_argument("--save_pred", default=False, type=bool, help="Save y_pred_all")
+parser.add_argument("--save_pred", default=True, type=bool, help="Save y_pred_all")
 a = parser.parse_args()
 
 # Select GPU
@@ -49,7 +49,7 @@ epochs = nilm["training"]["epoch"]
 start = nilm["training"]["start_stopping"]
 
 if a.time == "":
-    files_and_directories = os.listdir("{}/ukdale/{}/logs/model/".format(name, nilm["model"]))
+    files_and_directories = os.listdir("{}/ukdale/{}/logs/model/House_{}/".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0]))
     time = np.sort(files_and_directories)[-1]
 else:
     time = a.time 
@@ -68,7 +68,7 @@ hist = []
 
 for r in range(1, nilm["run"]+1):
     #hist.append(np.load("{}/ukdale/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["model"], time, r, epochs), allow_pickle=True))
-    hist.append(np.load("{}/ukdale/{}/logs/model/{}/{}/history_{}.npy".format(name, nilm["model"], time, r, epochs), allow_pickle=True))
+    hist.append(np.load("{}/ukdale/{}/logs/model/House_{}/{}/{}/history_{}.npy".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time, r, epochs), allow_pickle=True))
     
 MAE_run = []
 for r in range(len(hist)):
@@ -140,9 +140,9 @@ for r in range(1, nilm["run"]+1):
     pos_val_min = np.argmin(hist[r-1].all()["val_mean_absolute_error"][start:epochs]) + start
     
     if nilm["training"]["save_best"]:
-        model.load_weights("{}/ukdale/{}/logs/model/{}/{}/checkpoint.ckpt".format(name, nilm["model"], time, r))
+        model.load_weights("{}/ukdale/{}/logs/model/House_{}/{}/{}/checkpoint.ckpt".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time, r))
     else:
-        model.load_weights("{}/ukdale/{}/logs/model/{}/{}/cp-{epoch:04d}.ckpt".format(name, nilm["model"], time, r, epoch=pos_val_min+1))
+        model.load_weights("{}/ukdale/{}/logs/model/House_{}/{}/{}/cp-{epoch:04d}.ckpt".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time, r, epoch=pos_val_min+1))
     
     if nilm["model"] == "S2P":
         x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, width)
@@ -180,7 +180,7 @@ for r in range(1, nilm["run"]+1):
     y_all_true = y_all_true.reshape([1,-1])
     
     if a.save_pred:
-        np.save("{}/ukdale/{}/logs/model/{}/pred.npy".format(name, nilm["model"], time), [y_all_pred, y_all_true])
+        np.save("{}/ukdale/{}/logs/model/House_{}/{}/pred_{}.npy".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time, r), [x_all, y_all_pred, y_all_true])
 
     print("Best Epoch : {}".format(pos_val_min+1))
 
@@ -191,8 +191,8 @@ for r in range(1, nilm["run"]+1):
     F1_app = F1_metric(y_all_pred, y_all_true, thr=thr_house_2[nilm["appliance"]])
     SAE_app = SAE_metric(y_all_pred, y_all_true)
 
-    if np.isnan(acc_P_tot):
-        print("Nan Detected")
+    if (np.isnan(acc_P_tot)) or (F1_app[0] == 0):
+        print("Error Detected")
     else:
         MAE_run.append(MAE_tot)
         ACC_run.append(acc_P_tot)
@@ -208,4 +208,4 @@ print(np.mean(RE_run), np.std(RE_run))
 print(np.mean(F1_run), np.std(F1_run))
 print(np.mean(SAE_run), np.std(SAE_run))
 
-np.save("{}/ukdale/{}/logs/model/{}/results.npy".format(name, nilm["model"], time), [MAE_run, ACC_run, PR_run, RE_run, F1_run, SAE_run])
+np.save("{}/ukdale/{}/logs/model/House_{}/{}/results.npy".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time), [MAE_run, ACC_run, PR_run, RE_run, F1_run, SAE_run])
