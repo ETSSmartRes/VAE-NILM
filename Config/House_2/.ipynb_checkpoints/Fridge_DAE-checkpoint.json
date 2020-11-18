@@ -1,0 +1,39 @@
+{
+    "model" : "DAE",
+    "config" : 0,
+    "appliance" : "Fridge",
+    "run" : 10,
+    "training" : {
+        "batch_size" : 64,
+        "epoch" : 75,
+        "lr" : 0.001,
+        "decay_steps" : 1,
+        "optimizer" : "adam",
+        "patience" : 0,
+        "start_stopping" : 5,
+        "save_best" : 0,
+        "ratio_train" : 0.3,
+        "ratio_test" : 0,
+        "validation_split" : 0.2,
+        "S2P_strides" : 1
+    },
+    "dataset" : {
+        "name" : "ukdale",
+        "test" : {
+            "house" : [2],
+            "ratio" : [1]
+        },
+        "train" : {
+            "house" : [1, 5],
+            "ratio" : [0.15, 1]
+       }
+    },
+    "preprocessing" : {
+        "main_mean" : 522,
+        "main_std" : 814,
+        "app_mean" : 200,
+        "app_std" : 400,
+        "width" : 512,
+        "strides" : 16
+    }
+}

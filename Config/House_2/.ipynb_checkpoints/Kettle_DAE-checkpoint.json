@@ -1,0 +1,39 @@
+{
+    "model" : "DAE",
+    "config" : 0,
+    "appliance" : "Kettle",
+    "run" : 10,
+    "training" : {
+        "batch_size" : 64,
+        "epoch" : 50,
+        "lr" : 0.001,
+        "decay_steps" : 1,
+        "optimizer" : "adam",
+        "patience" : 10,
+        "start_stopping" : 10,
+        "save_best" : 1,
+        "ratio_train" : 0.3,
+        "ratio_test" : 0,
+        "validation_split" : 0.2,
+        "S2P_strides" : 1
+    },
+    "dataset" : {
+        "name" : "ukdale",
+        "test" : {
+            "house" : [2],
+            "ratio" : [1]
+        },
+        "train" : {
+            "house" : [1, 5],
+            "ratio" : [0.15, 1]
+       }
+    },
+    "preprocessing" : {
+        "main_mean" : 522,
+        "main_std" : 814,
+        "app_mean" : 700,
+        "app_std" : 1000,
+        "width" : 128,
+        "strides" : 16
+    }
+}
