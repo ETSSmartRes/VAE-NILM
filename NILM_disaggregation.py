@@ -52,6 +52,12 @@ for r in range(1, nilm["run"]+1):
     # Load dataset
     ###############################################################################
     x_train, y_train = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"], set_type="train")
+    
+    main_mean = nilm["preprocessing"]["main_mean"]
+    main_std = nilm["preprocessing"]["main_std"]
+
+    app_mean = nilm["preprocessing"]["app_mean"]
+    app_std = nilm["preprocessing"]["app_std"]
 
     ###############################################################################
     # Training parameters
@@ -132,12 +138,6 @@ for r in range(1, nilm["run"]+1):
     ###############################################################################
     if ADD_VAL_SET:
         if nilm["dataset"]["name"] == "ukdale":
-            main_mean = nilm["preprocessing"]["main_mean"]
-            main_std = nilm["preprocessing"]["main_std"]
-
-            app_mean = nilm["preprocessing"]["app_mean"]
-            app_std = nilm["preprocessing"]["app_std"]
-
             if nilm["model"] == "S2P":
                 x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, nilm["preprocessing"]["width"], nilm["training"]["S2P_strides"])
                 history_cb = AdditionalValidationSets([((x_test_s2p-main_mean)/main_std, (y_test_s2p-app_mean)/app_std, 'House_2')], verbose=1)
