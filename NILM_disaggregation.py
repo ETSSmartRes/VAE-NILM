@@ -16,6 +16,8 @@ from dtw import *
 import logging
 import json
 
+ADD_VAL_SET = False
+
 logging.getLogger('tensorflow').disabled = True
 
 ###############################################################################
@@ -49,7 +51,7 @@ for r in range(1, nilm["run"]+1):
     ###############################################################################
     # Load dataset
     ###############################################################################
-    x_train, y_train, x_test, y_test = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"])
+    x_train, y_train = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"], set_type="train")
 
     ###############################################################################
     # Training parameters
@@ -128,26 +130,26 @@ for r in range(1, nilm["run"]+1):
     ###############################################################################
     # Normalize Test Data and History Callback
     ###############################################################################
-    
-    if nilm["dataset"]["name"] == "ukdale":
-        main_mean = nilm["preprocessing"]["main_mean"]
-        main_std = nilm["preprocessing"]["main_std"]
-            
-        app_mean = nilm["preprocessing"]["app_mean"]
-        app_std = nilm["preprocessing"]["app_std"]
-        
-        if nilm["model"] == "S2P":
-            x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, nilm["preprocessing"]["width"], nilm["training"]["S2P_strides"])
-            history_cb = AdditionalValidationSets([((x_test_s2p-main_mean)/main_std, (y_test_s2p-app_mean)/app_std, 'House_2')], verbose=1)
-        else:
-            history_cb = AdditionalValidationSets([((x_test-main_mean)/main_std, (y_test-app_mean)/app_std, 'House_2')], verbose=1)
-            
-    elif nilm["dataset"]["name"] == "house_2":
-        history_cb = AdditionalValidationSets([(x_test, y_test, 'House_2')], verbose=1)
-    elif nilm["dataset"]["name"] == "refit":
-        history_cb = AdditionalValidationSets([(x_test, y_test, 'House_2')], verbose=1)
-    
-    #list_callbacks.append(history_cb)
+    if ADD_VAL_SET:
+        if nilm["dataset"]["name"] == "ukdale":
+            main_mean = nilm["preprocessing"]["main_mean"]
+            main_std = nilm["preprocessing"]["main_std"]
+
+            app_mean = nilm["preprocessing"]["app_mean"]
+            app_std = nilm["preprocessing"]["app_std"]
+
+            if nilm["model"] == "S2P":
+                x_test_s2p, y_test_s2p = transform_s2p(x_test, y_test, nilm["preprocessing"]["width"], nilm["training"]["S2P_strides"])
+                history_cb = AdditionalValidationSets([((x_test_s2p-main_mean)/main_std, (y_test_s2p-app_mean)/app_std, 'House_2')], verbose=1)
+            else:
+                history_cb = AdditionalValidationSets([((x_test-main_mean)/main_std, (y_test-app_mean)/app_std, 'House_2')], verbose=1)
+
+        elif nilm["dataset"]["name"] == "house_2":
+            history_cb = AdditionalValidationSets([(x_test, y_test, 'House_2')], verbose=1)
+        elif nilm["dataset"]["name"] == "refit":
+            history_cb = AdditionalValidationSets([(x_test, y_test, 'House_2')], verbose=1)
+
+        list_callbacks.append(history_cb)
     
     ###############################################################################
     # Summary of all parameters

@@ -133,8 +133,8 @@ F1_run = []
 SAE_run = []
 
 #Load Data
-nilm["dataset"]["test"]["ratio"] = [1]    
-x_train, y_train, x_test, y_test = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"])
+#nilm["dataset"]["test"]["ratio"] = [1]    
+x_test, y_test = load_data(nilm["model"], nilm["appliance"], nilm["dataset"], nilm["preprocessing"]["width"], nilm["preprocessing"]["strides"], set_type="test")
 
 for r in range(1, nilm["run"]+1):
     pos_val_min = np.argmin(hist[r-1].all()["val_mean_absolute_error"][start:epochs]) + start

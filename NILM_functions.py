@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from VAE_functions import *
 
-def load_data(model, appliance, dataset, width, strides):
+def load_data(model, appliance, dataset, width, strides, set_type="both"):
 
     def import_data(app_type, house):
         x = np.load("Data/UKDALE/{}_main_house_{}.npy".format(app_type, house))
@@ -23,9 +23,13 @@ def load_data(model, appliance, dataset, width, strides):
 
         return x_, y_
 
-    def select_ratio(x, y, ratio):
+    def select_ratio(x, y, ratio, set_type):
         num_data = x.shape[0]
-        ind = np.random.permutation(num_data)
+        if set_type == "train":
+            ind = np.random.permutation(num_data)
+        else:
+            ind = np.arange(num_data)
+            
         max_data = int(num_data*ratio)
 
         if ratio == 0:
@@ -33,19 +37,18 @@ def load_data(model, appliance, dataset, width, strides):
         else:
             return x[ind[:max_data]], y[ind[:max_data]]
 
-    def create_dataset(appliance, dataset, width, strides, data_type):
+    def create_dataset(appliance, dataset, width, strides, set_type):
         x_tot = np.array([]).reshape(0, width, 1)
         y_tot = np.array([]).reshape(0, width, 1)
 
-        for h, r in zip(dataset[data_type]["house"], dataset[data_type]["ratio"]):
+        for h, r in zip(dataset[set_type]["house"], dataset[set_type]["ratio"]):
             x, y = import_data(appliance, h) # Load complete dataset
             x_, y_ = seq_dataset(x, y, width, stride) # Divide dataset in window
             
-            if data_type == "test":
-                x_r = x_
-                y_r = y_
+            if set_type == "test":
+                x_r, y_r = select_ratio(x_, y_, r, set_type)
             else:
-                x_r, y_r = select_ratio(x_, y_, r)# Select the proportion needed
+                x_r, y_r = select_ratio(x_, y_, r, set_type)# Select the proportion needed
 
             print("Total house {} : x:{}, y:{}".format(h, x_.shape, y_.shape))
             print("Ratio house {} : {}, x:{}, y:{}".format(h, r, x_r.shape, y_r.shape))
@@ -78,13 +81,20 @@ def load_data(model, appliance, dataset, width, strides):
             stride = strides
 
         print("###############################################################################")
-        print("Create train dataset")
-        x_train, y_train = create_dataset(appliance, dataset, width, strides, "train")
+        if (set_type == "train") or (set_type == "both"):
+            print("Create train dataset")
+            x_train, y_train = create_dataset(appliance, dataset, width, strides, "train")
+        
+        if (set_type == "test") or (set_type == "both"):
+            print("Create test dataset")
+            x_test, y_test = create_dataset(appliance, dataset, width, strides, "test")
 
-        print("Create test dataset")
-        x_test, y_test = create_dataset(appliance, dataset, width, strides, "test")
-
-        return x_train, y_train, x_test, y_test
+        if (set_type == "both"):
+            return x_train, y_train, x_test, y_test
+        elif (set_type == "train"):
+            return x_train, y_train
+        else:
+            return x_test, y_test
 
 #         elif a.dataset == "refit":
 #             ###############################################################################
