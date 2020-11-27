@@ -21,7 +21,7 @@
         "name" : "ukdale",
         "test" : {
             "house" : [5],
-            "ratio" : [0.01]
+            "ratio" : [1]
         },
         "train" : {
             "house" : [1, 2],

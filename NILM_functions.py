@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from VAE_functions import *
 
-def load_data(model, appliance, dataset, width, strides, set_type="both"):
+def load_data(model, appliance, dataset, width, strides, test_from=0, set_type="both"):
 
     def import_data(app_type, house):
         x = np.load("Data/UKDALE/{}_main_house_{}.npy".format(app_type, house))
@@ -23,13 +23,14 @@ def load_data(model, appliance, dataset, width, strides, set_type="both"):
 
         return x_, y_
 
-    def select_ratio(x, y, ratio, set_type):
+    def select_ratio(x, y, ratio, set_type, test_from=0):
         num_data = x.shape[0]
         if set_type == "train":
             ind = np.random.permutation(num_data)
         else:
             ind = np.arange(num_data)
-            
+        
+        min_data = int(num_data*test_from)
         max_data = int(num_data*ratio)
 
         if ratio == 0:
@@ -37,7 +38,7 @@ def load_data(model, appliance, dataset, width, strides, set_type="both"):
         else:
             return x[ind[:max_data]], y[ind[:max_data]]
 
-    def create_dataset(appliance, dataset, width, strides, set_type):
+    def create_dataset(appliance, dataset, width, strides, set_type, test_from=0):
         x_tot = np.array([]).reshape(0, width, 1)
         y_tot = np.array([]).reshape(0, width, 1)
 
@@ -46,7 +47,7 @@ def load_data(model, appliance, dataset, width, strides, set_type="both"):
             x_, y_ = seq_dataset(x, y, width, stride) # Divide dataset in window
             
             if set_type == "test":
-                x_r, y_r = select_ratio(x_, y_, r, set_type)
+                x_r, y_r = select_ratio(x_, y_, r, set_type, test_from=test_from)
             else:
                 x_r, y_r = select_ratio(x_, y_, r, set_type)# Select the proportion needed
 
@@ -87,7 +88,7 @@ def load_data(model, appliance, dataset, width, strides, set_type="both"):
         
         if (set_type == "test") or (set_type == "both"):
             print("Create test dataset")
-            x_test, y_test = create_dataset(appliance, dataset, width, strides, "test")
+            x_test, y_test = create_dataset(appliance, dataset, width, strides, "test", test_from=test_from)
 
         if (set_type == "both"):
             return x_train, y_train, x_test, y_test

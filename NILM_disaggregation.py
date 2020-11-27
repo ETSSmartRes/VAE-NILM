@@ -195,7 +195,7 @@ for r in range(1, nilm["run"]+1):
         ###############################################################################
         # Save history
         ###############################################################################
-        np.save("{}/{}/{}/logs/model/House_{}/{}/{}/history_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time, r, epochs), history.history)
+        np.save("{}/{}/{}/logs/model/House_{}/{}/{}/history.npy".format(name, nilm["dataset"]["name"], nilm["model"], nilm["dataset"]["test"]["house"][0], time, r), history.history)
         #np.save("{}/{}/{}/logs/model/{}/{}/history_cb_{}.npy".format(name, nilm["dataset"]["name"], nilm["model"], time, r, epochs), history_cb.history)
 
         print("Fit finished!")

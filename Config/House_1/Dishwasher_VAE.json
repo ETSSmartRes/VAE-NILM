@@ -4,12 +4,12 @@
     "appliance" : "Dishwasher",
     "run" : 10,
     "training" : {
-        "batch_size" : 16,
-        "epoch" : 100,
+        "batch_size" : 32,
+        "epoch" : 200,
         "lr" : 0.001,
         "decay_steps" : 2,
         "optimizer" : "rmsprop",
-        "patience" : 10,
+        "patience" : 20,
         "start_stopping" : 5,
         "save_best" : 0,
         "ratio_train" : 0.3,
@@ -34,6 +34,6 @@
         "app_mean" : 0,
         "app_std" : 1,
         "width" : 1024,
-        "strides" : 256
+        "strides" : 128
     }
 }

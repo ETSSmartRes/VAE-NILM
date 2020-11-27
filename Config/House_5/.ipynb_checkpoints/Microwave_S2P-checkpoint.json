@@ -5,7 +5,7 @@
     "run" : 10,
     "training" : {
         "batch_size" : 2000,
-        "epoch" : 50,
+        "epoch" : 200,
         "lr" : 0.001,
         "decay_steps" : 1,
         "optimizer" : "adam",
@@ -21,7 +21,7 @@
         "name" : "ukdale",
         "test" : {
             "house" : [5],
-            "ratio" : [0.01]
+            "ratio" : [1]
         },
         "train" : {
             "house" : [1, 2],

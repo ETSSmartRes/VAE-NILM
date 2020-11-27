@@ -5,11 +5,11 @@
     "run" : 10,
     "training" : {
         "batch_size" : 128,
-        "epoch" : 30,
+        "epoch" : 200,
         "lr" : 0.001,
         "decay_steps" : 1,
         "optimizer" : "adam",
-        "patience" : 10,
+        "patience" : 20,
         "start_stopping" : 10,
         "save_best" : 1,
         "ratio_train" : 0.3,
@@ -20,8 +20,9 @@
     "dataset" : {
         "name" : "ukdale",
         "test" : {
+            "batch" : [0.2],
             "house" : [1],
-            "ratio" : [0.01]
+            "ratio" : [0.2]
         },
         "train" : {
             "house" : [2, 5],

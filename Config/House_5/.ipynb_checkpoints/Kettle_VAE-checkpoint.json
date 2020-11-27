@@ -2,14 +2,14 @@
     "model" : "VAE",
     "config" : 0,
     "appliance" : "Kettle",
-    "run" : 10,
+    "run" : 1,
     "training" : {
         "batch_size" : 150,
-        "epoch" : 100,
+        "epoch" : 200,
         "lr" : 0.001,
         "decay_steps" : 2,
         "optimizer" : "rmsprop",
-        "patience" : 10,
+        "patience" : 20,
         "start_stopping" : 50,
         "save_best" : 1,
         "ratio_train" : 0.3,
@@ -21,7 +21,7 @@
         "name" : "ukdale",
         "test" : {
             "house" : [5],
-            "ratio" : [0.01]
+            "ratio" : [1]
         },
         "train" : {
             "house" : [1, 2],
