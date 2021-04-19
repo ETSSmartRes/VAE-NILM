@@ -22,7 +22,7 @@ appliance_dict = {
     'Fridge': uk_dale_cfg.Fridge,
     'Dishwasher': uk_dale_cfg.Dishwasher
 }
-base_path = '../data/UK_DALE'
+base_path = '../Data/UKDALE'
 
 
 # step1: convert .dat to .npy
