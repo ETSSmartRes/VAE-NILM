@@ -27,7 +27,42 @@ https://github.com/DLZRMR/seq2subseq
 
 # Datasets and preprocessing
 
+1. Download UKDALE files and extract .dat files in each house folder.
 
+Example:
+```
+Data/
+|-- UKDALE/
+|   |-- house_1
+|   |   |-- channel1.dat
+|   |   |-- channel2.dat
+|   |   |-- ...
+|   |-- house_2
+|   |   |-- channel1.dat
+|   |   |-- ...
+|   |-- ...
+```
+
+2. Execute the preprocess code
+```
+python uk_dale_preprocess.py
+```
+
+It will generate these files:
+```
+Data/
+|-- UKDALE/
+|   |-- Dishwasher_appliance_house_1
+|   |-- Dishwasher_main_house_1
+|   |-- Fridge_appliance_house_1
+|   |-- Fridge_main_house_1
+|   |-- ...
+|   |-- Dishwasher_appliance_house_2
+|   |-- Dishwasher_main_house_2
+|   |-- Fridge_appliance_house_2
+|   |-- Fridge_main_house_2
+|   |-- ...
+```
 
 # Training and testing
 The training is performed with the following command:
