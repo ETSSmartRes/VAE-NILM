@@ -11,6 +11,9 @@ import os
 import random
 from os.path import join
 
+#Source Code from : https://github.com/DLZRMR/seq2subseq
+
+
 name = ['WashingMachine', 'Kettle', 'Microwave', 'Fridge', 'Dishwasher']
 appliance_dict = {
     'WashingMachine': uk_dale_cfg.WashingMachine,

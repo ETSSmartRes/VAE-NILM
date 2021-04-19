@@ -1,3 +1,5 @@
+#Source Code from : https://github.com/DLZRMR/seq2subseq
+
 # House_id : Channel_id
 Kettle = {
     1: 10, 2: 8, 3: 2, 5: 18
