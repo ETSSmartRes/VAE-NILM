@@ -35,7 +35,7 @@ The training is performed with the following command:
 python NILM_disaggregation.py --gpu 0 --config Config/House_2/WashingMachine_VAE.json
 ```
 
-Where --gpu is used to select a specific GPU, and --config to select the config file associated with the model to execute.
+Where --gpu is used to select a specific GPU, and --config to select the config file associated with the training to execute.
 
 The test is performed with the following command:
 ```
