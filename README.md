@@ -76,7 +76,7 @@ The test is performed with the following command:
 ```
 python NILM_test.py --gpu 0 --config Config/House_2/WashingMachine_VAE.json
 ```
-The script tests the last trained model of the selected configuration. It predicts the energy disaggregation on the test data e.g., house 2 and saves it in "pred_1.npy". It also prints the results for the metrics: MAE, ACC, PRECISION, RECALL, F1-SCORE, SAE and saves the scores in results_median.npy.
+The script tests the last trained model of the selected configuration. It predicts the energy disaggregation on the test data e.g., house 2 and saves it in "pred_1.npy". It also prints the results for the metrics: MAE, ACC, PRECISION, RECALL, F1-SCORE, SAE and saves the scores in "results_median.npy".
 
 Example:
 ```
