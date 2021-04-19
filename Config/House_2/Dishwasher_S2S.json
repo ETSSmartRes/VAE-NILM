@@ -2,7 +2,7 @@
     "model" : "S2S",
     "config" : 0,
     "appliance" : "Dishwasher",
-    "run" : 1,
+    "run" : 10,
     "training" : {
         "batch_size" : 128,
         "epoch" : 50,
