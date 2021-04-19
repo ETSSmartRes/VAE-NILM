@@ -1,9 +1,9 @@
 # Energy Disaggregation using Variational Autoencoders
 This code implements the Variational Autoencoders model used in the paper : 
 
-Langevin, A., Carbonneau, M. A., Cheriet, M., & Gagnon, G. (2021). Energy Disaggregation using Variational Autoencoders. arXiv preprint arXiv:2103.12177.
+**Langevin, A., Carbonneau, M. A., Cheriet, M., & Gagnon, G. (2021). Energy Disaggregation using Variational Autoencoders. arXiv preprint arXiv:2103.12177.**
 
-Comparison methods:
+### Comparison methods:
 
 Kelly, J., & Knottenbelt, W. (2015, November). Neural nilm: Deep neural networks applied to energy disaggregation. In Proceedings of the 2nd ACM international conference on embedded systems for energy-efficient built environments (pp. 55-64).
 
@@ -20,8 +20,24 @@ https://github.com/DLZRMR/seq2subseq
 
 # Setup
 
+1- Create your own environment with Python > 3.6
+2- Configure deep learning environment with Tensorflow
+3- Install others requirement packages
+4- Clone this repository
+
 # Datasets and preprocessing
 
+
+
 # Training and testing
+The training is performed with the following command:
+```
+python NILM_disaggregation.py --gpu 0 --config Config/House_2/WashingMachine_VAE.json
+```
 
+Where --gpu is used to select a specific GPU, and --config to select the config file associated with the model to execute.
 
+The test is performed with the following command:
+```
+python NILM_test.py --gpu 0 --config Config/House_2/WashingMachine_VAE.json
+```
