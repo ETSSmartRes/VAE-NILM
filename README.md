@@ -48,7 +48,7 @@ Data/
 python uk_dale_preprocess.py
 ```
 
-It will generate these files:
+It will generate these files for each house and the each appliance:
 ```
 Data/
 |-- UKDALE/
