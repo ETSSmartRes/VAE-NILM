@@ -189,6 +189,32 @@ def conv_block_seq_res(inputs, filters, kernel_size, strides, name, bn=True, In=
     outputs = tf.keras.layers.Activation("relu", name="{}_ReLU3".format(name))(outputs)
     
     return outputs
+
+def conv_block_seq_res_fixe(inputs, filters, kernel_size, strides, name, bn=True, In=True, ResCon=True):
+    outputs = tf.keras.layers.Conv1D(64, kernel_size, strides=strides, padding="same", name="{}_Conv1D1".format(name))(inputs)
+    if bn:
+        outputs = tf.keras.layers.BatchNormalization(name="{}_BatchNorm1".format(name))(outputs)
+    outputs = tf.keras.layers.Activation("relu", name="{}_ReLU1".format(name))(outputs)
+    
+    outputs = tf.keras.layers.Conv1D(64, 1, strides=strides, padding="same", name="{}_Conv1D2".format(name))(outputs)
+    if bn:
+        outputs = tf.keras.layers.BatchNormalization(name="{}_BatchNorm2".format(name))(outputs)
+    outputs = tf.keras.layers.Activation("relu", name="{}_ReLU2".format(name))(outputs)
+    
+    outputs = tf.keras.layers.Conv1D(256, kernel_size, strides=strides, padding="same", name="{}_Conv1D3".format(name))(outputs)
+    if bn:
+        outputs = tf.keras.layers.BatchNormalization(name="{}_BatchNorm3".format(name))(outputs)
+    
+    # Residual Add
+    if ResCon:
+        outputs = tf.keras.layers.Add()([outputs, inputs])
+    
+    if In:
+        outputs = InstanceNormalization(name="{}_InstNorm2".format(name))(outputs)
+
+    outputs = tf.keras.layers.Activation("relu", name="{}_ReLU3".format(name))(outputs)
+    
+    return outputs
     
 
 def Conv1DTranspose(input_tensor, filters, kernel_size, strides=2, padding='same', activation=None):
