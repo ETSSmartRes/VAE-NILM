@@ -185,9 +185,9 @@ for r in range(1, nilm["run"]+1):
         elif nilm["model"] == "VAE":
             y_pred = model.predict([(x_test-main_mean)/main_std], verbose=1)
 
-            y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride)
-            x_all = reconstruct(x_test[:], width, stride)
-            y_all_true = reconstruct(y_test[:], width, stride)
+            y_all_pred = reconstruct(y_pred[:]*app_std+app_mean, width, stride, "median")
+            x_all = reconstruct(x_test[:], width, stride, "median")
+            y_all_true = reconstruct(y_test[:], width, stride, "median")
 
         elif nilm["model"] == "S2S":
             y_pred = model.predict([(x_test-main_mean)/main_std], verbose=1)
@@ -264,4 +264,4 @@ print(np.mean(RE_run), np.std(RE_run))
 print(np.mean(F1_run), np.std(F1_run))
 print(np.mean(SAE_run), np.std(SAE_run))
 
-np.save("{}/ukdale/{}/logs/model/House_{}/{}/results.npy".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time), [MAE_run, ACC_run, PR_run, RE_run, F1_run, SAE_run])
+np.save("{}/ukdale/{}/logs/model/House_{}/{}/results_median.npy".format(name, nilm["model"], nilm["dataset"]["test"]["house"][0], time), [MAE_run, ACC_run, PR_run, RE_run, F1_run, SAE_run])
