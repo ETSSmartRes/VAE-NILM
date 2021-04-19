@@ -44,7 +44,7 @@ def load_data(model, appliance, dataset, width, strides, test_from=0, set_type="
 
         for h, r in zip(dataset[set_type]["house"], dataset[set_type]["ratio"]):
             x, y = import_data(appliance, h) # Load complete dataset
-            x_, y_ = seq_dataset(x, y, width, stride) # Divide dataset in window
+            x_, y_ = seq_dataset(x, y, width, strides) # Divide dataset in window
             
             if set_type == "test":
                 x_r, y_r = select_ratio(x_, y_, r, set_type, test_from=test_from)
@@ -303,6 +303,9 @@ def load_data(model, appliance, dataset, width, strides, test_from=0, set_type="
 #             print(x_test.shape, y_test.shape)
 
 def create_model(model, config, width, optimizer):
+    
+    config = "fixe_filter"
+    
     if model == "VAE":
         def KL_loss(y_true, y_pred):
             # Regularization term
@@ -395,6 +398,83 @@ def create_model(model, config, width, optimizer):
             deconv6 = Conv1DTranspose(dconc15, start_filter_num, kernel_size=3, strides=2, padding='same')
 
             dconv_seq10 = conv_block_seq_res(deconv6, start_filter_num, kernel_size, 1, "dconv_seq10", In=False)
+            dconc17 = tf.keras.layers.concatenate([dconv_seq10, conv_seq1], name="dconc17")
+
+            x_pred = tf.keras.layers.Conv1D(1, 3, padding="same", activation="relu", name="x_pred")(dconc17)
+
+            model = tf.keras.Model(inputs=[x, eps], outputs=x_pred)
+            model.summary()
+            
+        if config == "fixe_filter":
+            start_filter_num = 256
+            kernel_size = 3
+            latent_dim = 16
+
+            x = tf.keras.Input(shape=(width,1))
+
+            conv_seq1 = conv_block_seq_res_fixe(x, start_filter_num, kernel_size, 1, "conv_seq1", ResCon=False)
+            pool1 = tf.keras.layers.MaxPooling1D(name="pool1")(conv_seq1)
+
+            conv_seq2 = conv_block_seq_res_fixe(pool1, start_filter_num, kernel_size, 1, "conv_seq2")
+            pool2 = tf.keras.layers.MaxPooling1D(name="pool2")(conv_seq2)
+
+            conv_seq3 = conv_block_seq_res_fixe(pool2, start_filter_num, kernel_size, 1, "conv_seq3")
+            pool3 = tf.keras.layers.MaxPooling1D(name="pool3")(conv_seq3)
+
+            conv_seq4 = conv_block_seq_res_fixe(pool3, start_filter_num, kernel_size, 1, "conv_seq4")
+            pool4 = tf.keras.layers.MaxPooling1D(name="pool4")(conv_seq4)
+
+            conv_seq5 = conv_block_seq_res_fixe(pool4, start_filter_num, kernel_size, 1, "conv_seq5")
+            pool5 = tf.keras.layers.MaxPooling1D(name="pool5")(conv_seq5)
+
+            conv_seq6 = conv_block_seq_res_fixe(pool5, start_filter_num, kernel_size, 1, "conv_seq6", In=False)
+            pool6 = tf.keras.layers.MaxPooling1D(name="pool6")(conv_seq6)
+
+            conv_seq7 = conv_block_seq_res_fixe(pool6, start_filter_num, kernel_size, 1, "conv_seq7", In=False)
+
+            flatten1 = tf.keras.layers.Flatten()(conv_seq7)
+
+            z_mu = tf.keras.layers.Dense(latent_dim, name="z_mu")(flatten1)
+            z_log_var = tf.keras.layers.Dense(latent_dim, name="z_log_var")(flatten1)
+
+            ###############################################################################
+            # normalize log variance to std dev
+            z_sigma = tf.keras.layers.Lambda(lambda t: K.exp(.5*t), name="z_sigma")(z_log_var)
+            eps = tf.keras.Input(tensor=K.random_normal(shape=(K.shape(x)[0], latent_dim)), name="eps")
+
+            z_eps = tf.keras.layers.Multiply(name="z_eps")([z_sigma, eps])
+            z = tf.keras.layers.Add(name="z")([z_mu, z_eps])
+
+            #latent_conv = tf.keras.layers.Dense(width//64, name="latent_conv")(z)
+            reshape1 = tf.keras.layers.Reshape([width//64,1], name="reshape1")(z)
+
+            ###############################################################################
+            #New for conditional VAE
+            dconv_seq4 = conv_block_seq_res_fixe(reshape1, start_filter_num, kernel_size, 1, "dconv_seq4", In=False, ResCon=False)
+            dconc5 = tf.keras.layers.concatenate([dconv_seq4, conv_seq7], name="dconc5")
+            deconv1 = Conv1DTranspose(dconc5, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq5 = conv_block_seq_res_fixe(deconv1, start_filter_num, kernel_size, 1, "dconv_seq5", In=False)
+            dconc7 = tf.keras.layers.concatenate([dconv_seq5, conv_seq6], name="dconc7")
+            deconv2 = Conv1DTranspose(dconc7, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq6 = conv_block_seq_res_fixe(deconv2, start_filter_num, kernel_size, 1, "dconv_seq6", In=False)
+            dconc9 = tf.keras.layers.concatenate([dconv_seq6, conv_seq5], name="dconc9")
+            deconv3 = Conv1DTranspose(dconc9, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq7 = conv_block_seq_res_fixe(deconv3, start_filter_num, kernel_size, 1, "dconv_seq7", In=False)
+            dconc11 = tf.keras.layers.concatenate([dconv_seq7, conv_seq4], name="dconc11")
+            deconv4 = Conv1DTranspose(dconc11, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq8 = conv_block_seq_res_fixe(deconv4, start_filter_num, kernel_size, 1, "dconv_seq8", In=False)
+            dconc13 = tf.keras.layers.concatenate([dconv_seq8, conv_seq3], name="dconc13")
+            deconv5 = Conv1DTranspose(dconc13, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq9 = conv_block_seq_res_fixe(deconv5, start_filter_num, kernel_size, 1, "dconv_seq9", In=False)
+            dconc15 = tf.keras.layers.concatenate([dconv_seq9, conv_seq2], name="dconc15")
+            deconv6 = Conv1DTranspose(dconc15, start_filter_num, kernel_size=3, strides=2, padding='same')
+
+            dconv_seq10 = conv_block_seq_res_fixe(deconv6, start_filter_num, kernel_size, 1, "dconv_seq10", In=False)
             dconc17 = tf.keras.layers.concatenate([dconv_seq10, conv_seq1], name="dconc17")
 
             x_pred = tf.keras.layers.Conv1D(1, 3, padding="same", activation="relu", name="x_pred")(dconc17)
@@ -854,23 +934,23 @@ def MAE_metric(x_pred, x_test, c_test=0, app_ratio=0, disaggregation=False, only
     
     return MAE_tot, MAE_app, MAE
 
-def SAE_metric(x_pred, x_test, window_size):
+# def SAE_metric(x_pred, x_test, window_size):
     
-    SAE = np.zeros(x_pred.shape[0])
+#     SAE = np.zeros(x_pred.shape[0])
     
-    for i in range(x_pred.shape[0]):
+#     for i in range(x_pred.shape[0]):
         
-        SAE_1d = []
+#         SAE_1d = []
         
-        for t in range(0, x_pred.shape[1], window_size):
-            SAE_1d.append(np.abs(x_pred[i,t:t+window_size].sum() - x_test[i,t:t+window_size].sum())/x_test[i,t:t+window_size].sum())
+#         for t in range(0, x_pred.shape[1], window_size):
+#             SAE_1d.append(np.abs(x_pred[i,t:t+window_size].sum() - x_test[i,t:t+window_size].sum())/x_test[i,t:t+window_size].sum())
         
-        SAE[i] = np.mean(SAE_1d)
+#         SAE[i] = np.mean(SAE_1d)
         
-    for s in SAE:
-        print(s)
+#     for s in SAE:
+#         print(s)
     
-    return SAE
+#     return SAE
 
 def SAE_metric(x_pred, x_test):
     
@@ -882,6 +962,20 @@ def SAE_metric(x_pred, x_test):
     print(SAE)
     
     return SAE
+
+def EpD_metric(x_pred, x_test, sampling=6):
+    
+    sPerDay = (60//sampling)*60*24
+    
+    EpD = np.zeros(x_pred.shape[0])
+    
+    for i in range(x_pred.shape[0]):
+        N_days = x_pred[i,:].shape[0]//sPerDay
+        EpD[i] = np.mean(np.abs(np.sum(x_pred[i,0:N_days*sPerDay].reshape(N_days,-1), axis=-1)-np.sum(x_test[i,0:N_days*sPerDay].reshape(N_days,-1), axis=-1)))*sampling/3600
+        
+    print(EpD)
+    
+    return EpD
 
 def F1_metric(x_pred, x_test, thr):
     from sklearn.metrics import f1_score as f1_score
@@ -946,18 +1040,37 @@ def PR_metric(x_pred, x_test, thr):
         
     return PR
 
-def reconstruct(y, width, strides):
+# def reconstruct(y, width, strides):
     
-    yr = np.zeros([width+(y.shape[0]-1)*strides])
-    zr = np.zeros([width+(y.shape[0]-1)*strides])
+#     yr = np.zeros([width+(y.shape[0]-1)*strides])
+#     zr = np.zeros([width+(y.shape[0]-1)*strides])
     
-    #print(yr.shape)
+#     #print(yr.shape)
+    
+#     for i in range(y.shape[0]):
+#         #print(i)
+#         yr[i*strides:i*strides+width] += y[i,:,0]
+#         zr[i*strides:i*strides+width] += np.ones([width])
+        
+#     yr /= zr
+    
+#     return yr
+
+def reconstruct(y, width, strides, merge_type="mean"):
+    
+    len_total = width+(y.shape[0]-1)*strides
+    depth = width//strides
+    
+    yr = np.zeros([len_total, depth])
+    yr[:] = np.nan
     
     for i in range(y.shape[0]):
-        #print(i)
-        yr[i*strides:i*strides+width] += y[i,:,0]
-        zr[i*strides:i*strides+width] += np.ones([width])
-        
-    yr /= zr
+        for d in range(depth):
+            yr[i*strides+(d*strides):i*strides+((d+1)*strides),d] = y[i,d*strides:(d+1)*strides,0]
+    
+    if merge_type == "mean":
+        yr = np.nanmean(yr, axis=1)
+    else:
+        yr = np.nanmedian(yr, axis=1)
     
     return yr
