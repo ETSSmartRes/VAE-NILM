@@ -2,7 +2,7 @@
     "model" : "VAE",
     "config" : 0,
     "appliance" : "Fridge",
-    "run" : 1,
+    "run" : 10,
     "training" : {
         "batch_size" : 32,
         "epoch" : 200,
@@ -10,7 +10,7 @@
         "decay_steps" : 2,
         "optimizer" : "rmsprop",
         "patience" : 20,
-        "start_stopping" : 50,
+        "start_stopping" : 100,
         "save_best" : 1,
         "ratio_train" : 0.3,
         "ratio_test" : 0,
@@ -34,6 +34,6 @@
         "app_mean" : 0,
         "app_std" : 1,
         "width" : 1024,
-        "strides" : 256
+        "strides" : 1024
     }
 }
